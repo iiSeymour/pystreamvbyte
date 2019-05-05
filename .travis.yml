@@ -6,5 +6,5 @@ python:
   - "3.6"
 install: pip install numpy numba
 script:
-  - python setup.py install
+  - python setup.py develop
   - make test
