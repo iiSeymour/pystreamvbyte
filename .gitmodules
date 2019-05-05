@@ -1,3 +1,6 @@
 [submodule "streamvbyte"]
 	path = src
 	url = https://github.com/lemire/streamvbyte.git
+[submodule "src"]
+	path = src
+	url = https://github.com/lemire/streamvbyte.git
