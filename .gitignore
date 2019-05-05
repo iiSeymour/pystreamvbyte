@@ -1,0 +1,10 @@
+*~
+*.so
+*.a
+*.pyc
+*.npy
+*.lprof
+__pycache__/
+venv*/
+dist/
+pystreamvbyte.egg-info/

@@ -1,0 +1,20 @@
+#!/usr/bin/env python3
+
+import numpy as np
+from streamvbyte import encode
+from utils import time, generate_data
+
+
+if __name__ == '__main__':
+    
+    data = generate_data()
+
+    with time("write uncompressed"):
+        np.save('uncompressed', data)
+
+    with time("compressed + write"):
+        compressed = encode(data)
+        np.save('compressed', compressed)
+
+    with time("write compressed  "):
+        np.save('compressed', compressed)

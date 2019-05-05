@@ -1,0 +1,33 @@
+#!/usr/bin/env python3
+
+from argparse import ArgumentParser
+from utils import benchmark, generate_data
+from streamvbyte import encode, decode
+from streamvbyte import encode_0124, decode_0124
+from streamvbyte import encode_delta, decode_delta
+
+
+def main(args):
+
+    data = generate_data(dtype=args.dtype)
+
+    for e, d in ((encode, decode), (encode_0124, decode_0124), (encode_delta, decode_delta)):
+
+        print("{:^56}".format(e.__name__))
+
+        with benchmark("encoding", size=len(data)):
+            compressed = e(data)
+
+        with benchmark("decoding", size=len(data)):
+            d(data, len(data), dtype=args.dtype)
+
+        ratio = (compressed.nbytes / data.nbytes) * 100
+        print("Compressed {:,} bytes to {:,} bytes ({:.2f}%)".format(
+            data.nbytes, compressed.nbytes, ratio)
+        )
+
+
+if __name__ == '__main__':
+    parser = ArgumentParser()
+    parser.add_argument('--dtype', default='uint32', choices=('uint32', 'int32', 'uint16', 'int16'))
+    main(parser.parse_args())
