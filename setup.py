@@ -1,8 +1,7 @@
 from setuptools import setup
-from streamvbyte import __version__
 
 setup(
     name='pystreamvbyte',
-    version=__version__,
+    version='0.3.0',
     install_requires=['numpy', 'numba'],
 )
