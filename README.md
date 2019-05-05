@@ -1,6 +1,6 @@
 # pystreamvbyte
 
-[](https://api.travis-ci.org/iiSeymour/pystreamvbyte.svg?branch=master)
+[![Build Status](https://travis-ci.org/iiSeymour/pystreamvbyte.svg?branch=master)](https://travis-ci.org/iiSeymour/pystreamvbyte)
 
 Python bindings to [streamvbyte](https://github.com/lemire/streamvbyte).
 
