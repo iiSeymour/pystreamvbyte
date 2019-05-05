@@ -1,5 +1,7 @@
 # pystreamvbyte
 
+[](https://api.travis-ci.org/iiSeymour/pystreamvbyte.svg?branch=master)
+
 Python bindings to [streamvbyte](https://github.com/lemire/streamvbyte).
 
 ## Quick Start
