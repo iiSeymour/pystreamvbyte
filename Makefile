@@ -1,5 +1,5 @@
 clean:
-	$(MAKE) -C src clean
+	test -d src/build && $(MAKE) -C src/build clean || exit 0
 	python setup.py clean
 	rm -rf *.pyc *.npy __pycache__ *~ pystreamvbyte.egg-info/ *.lprof build dist *.so .eggs src/build
 
