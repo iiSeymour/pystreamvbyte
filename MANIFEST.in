@@ -1,2 +1,0 @@
-include src/include/*.h
-include src/build/libstreamvbyte_static.a
