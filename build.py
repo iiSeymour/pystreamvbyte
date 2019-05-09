@@ -2,13 +2,13 @@
 Builds the C Python wrapper for libstreamvbyte
 """
 
+import os.path
 from cffi import FFI
-from pathlib import Path
 
 
-src_path = Path("src").resolve()
-lib_path = src_path.joinpath("libstreamvbyte.so.0.0.1")
-include_path = src_path.joinpath("include")
+src_path = os.path.abspath("src")
+lib_path = os.path.join(src_path, "libstreamvbyte.so.0.0.1")
+include_path = os.path.join(src_path, "include")
 
 ffibuilder = FFI()
 
@@ -20,8 +20,8 @@ ffibuilder.set_source(
     #include <streamvbytedelta.h>
     #include <streamvbyte_zigzag.h>
     """,
-    extra_objects=[str(lib_path)],
-    include_dirs=[str(include_path)],
+    extra_objects=[lib_path],
+    include_dirs=[include_path],
     libraries=["c"],
 )
 
