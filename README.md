@@ -8,7 +8,8 @@ Python bindings to [streamvbyte](https://github.com/lemire/streamvbyte).
 
 ```
 $ git clone --recurse-submodules https://github.com/iiSeymour/pystreamvbyte.git
-$ python3 setup.py develop
+$ python3 -m venv .venv
+$ source .venv/bin/activate
 $ make test
 ```
 
