@@ -6,5 +6,5 @@ setup(
     packages=find_packages(),
     install_requires=['numpy', 'cffi'],
     setup_requires=['cffi'],
-    cffi_modules=['build.py:ffibuilder'],
+    cffi_modules=['streamvbyte/build.py:ffibuilder'],
 )

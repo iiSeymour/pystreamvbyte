@@ -11,3 +11,4 @@ dist/
 build/
 pystreamvbyte.egg-info/
 .eggs
+.tox/
