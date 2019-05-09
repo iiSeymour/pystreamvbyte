@@ -2,58 +2,11 @@
 Python bindings for libstreamvbyte
 """
 
-import os
-import sys
-import ctypes
 from functools import wraps
 
 import numpy as np
-from numba import vectorize, int16, int32, int8, uint16, uint32
 
-
-if sys.platform.startswith("linux"):
-    lib_ext = "so.0.0.1"
-elif sys.platform == "darwin":
-    lib_ext = "dylib"
-else:
-    raise Exception("Unsupported platform %s" % sys.platform)
-
-location = os.environ.get("LIBSTREAMVBYTE", "./src/libstreamvbyte.%s" % lib_ext)
-streamvbyte_lib = ctypes.cdll.LoadLibrary(location)
-
-_encode = streamvbyte_lib.streamvbyte_encode
-_encode.argtypes = (ctypes.POINTER(ctypes.c_uint32), ctypes.c_int, ctypes.POINTER(ctypes.c_uint8))
-_encode.restype = ctypes.c_int
-
-_decode = streamvbyte_lib.streamvbyte_decode
-_decode.argtypes = (ctypes.POINTER(ctypes.c_uint8), ctypes.POINTER(ctypes.c_uint32), ctypes.c_int)
-_decode.restype = ctypes.c_int
-
-_encode_0124 = streamvbyte_lib.streamvbyte_encode_0124
-_encode_0124.argtypes = _encode.argtypes
-_encode_0124.restype = _encode.restype
-
-_decode_0124 = streamvbyte_lib.streamvbyte_decode_0124
-_decode_0124.argtypes = _decode.argtypes
-_decode_0124.restype = _decode.restype
-
-_encode_delta = streamvbyte_lib.streamvbyte_delta_encode
-_encode_delta.argtypes = _encode.argtypes + (ctypes.c_uint32,)
-_encode_delta.restype = ctypes.c_int
-
-_decode_delta = streamvbyte_lib.streamvbyte_delta_decode
-_decode_delta.argtypes = _decode.argtypes + (ctypes.c_uint32,)
-_decode_delta.restype = ctypes.c_int
-
-
-@vectorize([uint32(int16, int8), uint32(int32, int8)])
-def to_zig_zag(data, shift):
-    return (data << 1) ^ (data >> shift)
-
-
-@vectorize([uint32(uint32), uint16(uint32)])
-def from_zig_zag(data):
-    return (data >> 1) ^ (-(data & 1))
+from _streamvbyte import lib, ffi
 
 
 def max_compressed_bytes(length):
@@ -65,73 +18,92 @@ def max_compressed_bytes(length):
     return cb + db
 
 
-def encode_factory(c_func):
-    """
-    Encode an array of a given length read from in to bout in varint format.
-    Returns the number of bytes written.
-    The number of values being stored (length) is not encoded in the compressed stream,
-    the caller is responsible for keeping a record of this length.
-    The pointer "in" should point to "length" values of size uint32_t
-    there is no alignment requirement on the out pointer
-    For safety, the out pointer should point to at least streamvbyte_max_compressedbyte(length)
-    bytes.
-    Uses 1,2,3 or 4 bytes per value + the decoding keys
-    """
+def encode_factory(c_func, prev=None):
+
     @wraps(c_func)
-    def encode(data, prev=0):
+    def encode(data):
+        """
+        Encode an array of a given length read from in to bout in varint format.
+        Returns the number of bytes written.
+        The number of values being stored (length) is not encoded in the compressed stream,
+        the caller is responsible for keeping a record of this length.
+        The pointer "in" should point to "length" values of size uint32_t
+        there is no alignment requirement on the out pointer
+        For safety, the out pointer should point to at least streamvbyte_max_compressedbyte(length)
+        bytes.
+        Uses 1,2,3 or 4 bytes per value + the decoding keys
+        """
+        # cast up int16 types
+        if data.dtype == np.int16: data = data.astype(np.int32)
+        elif data.dtype == np.uint16: data = data.astype(np.uint32)
 
-        if np.issubdtype(data.dtype, np.signedinteger):
-            diffs = np.ediff1d(data, to_begin=data[0])
-            shift = np.int8(data.dtype.itemsize * 8 - 1)
-            data = to_zig_zag(diffs, shift)
+        length = len(data)
 
-        if np.issubdtype(data.dtype, np.uint16):
-            data = data.astype(np.uint32)
+        # delta zigzag encode signed types
+        if data.dtype == np.int32:
+            udata = np.empty(len(data), dtype=np.uint32)
+            u = ffi.cast("uint32_t *", ffi.from_buffer(udata))
+            d = ffi.cast("int32_t *", ffi.from_buffer(data))
+            lib.zigzag_delta_encode(d, u, length, 0)
+            data = udata
 
-        output = np.zeros(max_compressed_bytes(len(data)), dtype=np.uint8)
-        encoded_size = c_func(
-            data.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32)),
-            len(data),
-            output.ctypes.data_as(ctypes.POINTER(ctypes.c_uint8)),
-            prev
-        )
+        n = max_compressed_bytes(length)
+        output = np.empty(n, dtype=np.uint8)
+
+        d = ffi.cast("uint32_t *", ffi.from_buffer(data))
+        o = ffi.cast("uint8_t *", ffi.from_buffer(output))
+
+        if prev is None:
+            encoded_size = c_func(d, length, o)
+        else:
+            encoded_size = c_func(d, length, o, prev)
+
         return output[:encoded_size]
+
     return encode
 
 
-def decode_factory(c_func):
-    """
-    Read "length" 32-bit integers in varint format from in, storing the result in out.
-    Returns the number of bytes read.
-    The caller is responsible for knowing how many integers ("length") are to be read:
-    this information ought to be stored somehow.
-    There is no alignment requirement on the "in" pointer.
-    The out pointer should point to length * sizeof(uint32_t) bytes.
-    """
+def decode_factory(c_func, prev=None):
     @wraps(c_func)
-    def decode(data, n, prev=0, dtype=None):
+    def decode(data, n, dtype=None):
+        """
+        Read "length" 32-bit integers in varint format from in, storing the result in out.
+        Returns the number of bytes read.
+        The caller is responsible for knowing how many integers ("length") are to be read:
+        this information ought to be stored somehow.
+        There is no alignment requirement on the "in" pointer.
+        The out pointer should point to length * sizeof(uint32_t) bytes.
+        """
+        data_ptr = ffi.cast("uint8_t *", ffi.from_buffer(data))
+        output = np.empty(n, dtype=np.uint32)
+        output_ptr = ffi.cast("uint32_t *", ffi.from_buffer(output))
 
-        output = np.zeros(n, dtype=np.uint32)
-        c_func(
-            data.ctypes.data_as(ctypes.POINTER(ctypes.c_uint8)),
-            output.ctypes.data_as(ctypes.POINTER(ctypes.c_uint32)),
-            n,
-            prev,
-        )
+        if prev is None:
+            c_func(data_ptr, output_ptr, n)
+        else:
+            c_func(data_ptr, output_ptr, n, prev)
 
-        if dtype and np.issubdtype(dtype, np.signedinteger):
-            zigzag = from_zig_zag(output)
-            output = np.cumsum(zigzag, dtype=dtype)
-        elif dtype and output.dtype != dtype:
+        # delta zigzag decode signed type
+        if dtype and dtype == np.int16 or dtype == np.int32:
+            zigzag = np.empty(n, dtype=np.int32)
+            lib.zigzag_delta_decode(
+                output_ptr,
+                ffi.cast("int32_t *", ffi.from_buffer(zigzag)),
+                n, 0
+            )
+            output = zigzag
+
+        if dtype and output.dtype != dtype:
             return output.astype(dtype)
+
         return output
 
     return decode
 
 
-encode = encode_factory(_encode)
-encode_0124 = encode_factory(_encode_0124)
-encode_delta = encode_factory(_encode_delta)
-decode = decode_factory(_decode)
-decode_0124 = decode_factory(_decode_0124)
-decode_delta = decode_factory(_decode_delta)
+encode = encode_factory(lib.streamvbyte_encode)
+encode_0124 = encode_factory(lib.streamvbyte_encode_0124)
+encode_delta = encode_factory(lib.streamvbyte_delta_encode, prev=0)
+decode = decode_factory(lib.streamvbyte_decode)
+decode_0124 = decode_factory(lib.streamvbyte_decode_0124)
+decode_delta = decode_factory(lib.streamvbyte_delta_decode, prev=0)

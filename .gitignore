@@ -5,6 +5,9 @@
 *.npy
 *.lprof
 __pycache__/
+.venv/
 venv*/
 dist/
+build/
 pystreamvbyte.egg-info/
+.eggs
