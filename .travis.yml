@@ -1,9 +1,10 @@
 language: python
-compiler: clang
+dist: xenial 
+install: pip install -r requirements.txt
+script: make test
 python:
   - "2.7"
+  - "3.4"
   - "3.5"
   - "3.6"
-install: pip install -r requirements.txt
-script:
-  - make test
+  - "3.7"
