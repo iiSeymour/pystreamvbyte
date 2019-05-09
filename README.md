@@ -4,13 +4,10 @@
 
 Python bindings to [streamvbyte](https://github.com/lemire/streamvbyte).
 
-## Quick Start
+## Installing
 
 ```
-$ git clone --recurse-submodules https://github.com/iiSeymour/pystreamvbyte.git
-$ python3 -m venv .venv
-$ source .venv/bin/activate
-$ make test
+$ pip install --user pystreamvbyte
 ```
 
 ## Example
@@ -24,4 +21,13 @@ dtype = np.uint32  # int16, uint16, int32, uint32 supported
 data = np.random.randint(0, 1e5, size=size, dtype=np.uint32)
 compressed = encode(data)
 recovered = decode(compress, size, dtype=dtype)
+```
+
+## Development Quick Start
+
+```
+$ git clone --recurse-submodules https://github.com/iiSeymour/pystreamvbyte.git
+$ python3 -m venv .venv
+$ source .venv/bin/activate
+$ make test
 ```

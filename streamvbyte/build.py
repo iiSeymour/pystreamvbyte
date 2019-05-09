@@ -7,7 +7,7 @@ from cffi import FFI
 
 
 src_path = os.path.abspath("src")
-lib_path = os.path.join(src_path, "libstreamvbyte.so.0.0.1")
+lib_path = os.path.join(src_path, "build", "libstreamvbyte_static.a")
 include_path = os.path.join(src_path, "include")
 
 ffibuilder = FFI()
