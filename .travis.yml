@@ -18,4 +18,4 @@ script:
   - make test
   - $PIP install cibuildwheel==0.10.2 twine
   - cibuildwheel --output-dir wheelhouse
-
+  - python -m twine upload wheelhouse/*.whl
