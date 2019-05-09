@@ -2,6 +2,7 @@ language: python
 matrix:
   include:
     - sudo: required
+      dist: xenial
       services: docker
       env: PIP=pip
     - os: osx
