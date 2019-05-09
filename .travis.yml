@@ -16,6 +16,10 @@ env:
 
 script:
   - make test
-  - $PIP install cibuildwheel==0.10.2 twine
-  - cibuildwheel --output-dir wheelhouse
-  - python -m twine upload wheelhouse/*.whl
+  - |
+    if [[ $TRAVIS_TAG ]]; then
+      $PIP install cibuildwheel==0.10.2
+      cibuildwheel --output-dir wheelhouse
+      python -m pip install twine
+      python -m twine upload wheelhouse/*.whl
+    fi
