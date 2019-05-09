@@ -13,14 +13,20 @@ $ pip install --user pystreamvbyte
 ## Example
 
 ```python
-import numpy as np
-from streamvbyte import encode, decode
-
-size = 40e6
-dtype = np.uint32  # int16, uint16, int32, uint32 supported
-data = np.random.randint(0, 1e5, size=size, dtype=np.uint32)
-compressed = encode(data)
-recovered = decode(compress, size, dtype=dtype)
+>>> import numpy as np
+>>> from streamvbyte import encode, decode
+>>>
+>>> size = int(40e6)
+>>> dtype = np.uint32  # int16, uint16, int32, uint32 supported
+>>> data = np.random.randint(0, 512, size=size, dtype=np.uint32)
+>>> data.nbytes
+160000000
+>>> compressed = encode(data)
+>>> compressed.nbytes
+70001679
+>>> recovered = decode(compressed, size, dtype=dtype)
+>>> compressed.nbytes / data.nbytes * 100
+43.751049375
 ```
 
 ## Development Quick Start
