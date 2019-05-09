@@ -1,4 +1,5 @@
 language: python
+compiler: clang
 python:
   - "2.7"
   - "3.5"
