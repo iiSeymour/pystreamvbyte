@@ -1,24 +1,13 @@
 language: python
-
 matrix:
   include:
     - sudo: required
-      services:
-        - docker
+      services: docker
       env: PIP=pip
     - os: osx
       language: generic
       env: PIP=pip2
-
 script:
   - make test
   - $PIP install cibuildwheel==0.10.2
   - cibuildwheel --output-dir wheelhouse
-
-deploy:
-  provider: pypi
-  user: iiSeymour
-  password:
-    secure: BI0kE9ZcOPr2kBZy1TrMbsUhGNj2rmSqtdVngti3DkHMRkdYHGQbjdPtyDOplNDMDssLoRdDlSckVbcIpoElXesG/WdygxvBMyLGCgzOJNl8urzdzJl0k7YddPdaAYpbmOp0I2cy8uCy+epWygVVCmOIaYJ8QUOfMi4vN1giumaBw0Bdat2+Bo6htuk/UaDAm35Rlil4PzVNSEB+E6k8s34Ux+DTdUd/VotHAjWg6ty4MeR33jytjf8ICM0bX/VIrGMNE1/xpAECtreaxBqy5jrbJW6gAnxcqqWkW57UslKLVT1KWz24OWRZLoeG6Xm6Udw3nljjeXPAZ+QAfEg230n9kJ+GhYNwh3OPBlooD9ogY9NhlbZX3HzWh6FYFFuDuB8YolGDZtQtNpp3upISdOHCf3iqJbdSWw81hO+9ZIyTgYVQ6rrAwQhFP1+X3Ji56HtIGPEj2JcKbCbS1sBWG8T07JQvEjhATVtko1h0diDnrpqooXaYgaAharWit3VfJt9YIdQQd20azTYOqp3b/VuitxwyzDHhQyhI13uP/KRbB2BbyChswTkZzvsByoRiEzt9RHy3bc8OQJohpH2dZK5dC+RCbI2uabYBQMNFAujL1kYv3lnV9UrbwznMQVRASe5yCaOSGrBxnvUf4xokFdKkINUIIASZkwmRcOYnbGQ=
-  on:
-    all_branches: true
