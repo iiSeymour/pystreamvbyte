@@ -1,4 +1,5 @@
 language: python
+
 matrix:
   include:
     - sudo: required
@@ -8,7 +9,13 @@ matrix:
     - os: osx
       language: generic
       env: PIP=pip2
+
+env:
+  global:
+    - CIBW_SKIP=*-manylinux1_i686
+
 script:
   - make test
-  - $PIP install cibuildwheel==0.10.2
+  - $PIP install cibuildwheel==0.10.2 twine
   - cibuildwheel --output-dir wheelhouse
+
