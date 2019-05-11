@@ -9,17 +9,17 @@ from streamvbyte import encode_delta, decode_delta
 
 def main(args):
 
-    data = generate_data(dtype=args.dtype)
+    data = generate_data(rmax=256, dtype=args.dtype, size=int(5e5))
 
     for e, d in ((encode, decode), (encode_0124, decode_0124), (encode_delta, decode_delta)):
 
         print("{:^56}".format(e.__name__))
 
-        with benchmark("encoding", size=len(data)):
-            compressed = e(data)
+        with benchmark("encoding", size=len(data) * args.trials):
+            for _ in range(args.trials): compressed = e(data)
 
-        with benchmark("decoding", size=len(data)):
-            d(data, len(data), dtype=args.dtype)
+        with benchmark("decoding", size=len(data) * args.trials):
+            for _ in range(args.trials): d(data, len(data), dtype=args.dtype)
 
         ratio = (compressed.nbytes / data.nbytes) * 100
         print("Compressed {:,} bytes to {:,} bytes ({:.2f}%)".format(
@@ -29,5 +29,6 @@ def main(args):
 
 if __name__ == '__main__':
     parser = ArgumentParser()
+    parser.add_argument('-n', '--trials', type=int, default=100, required=False)
     parser.add_argument('--dtype', default='uint32', choices=('uint32', 'int32', 'uint16', 'int16'))
     main(parser.parse_args())

@@ -3,7 +3,7 @@ from time import perf_counter
 from contextlib import contextmanager
 
 
-def generate_data(rmax=256, size=int(1e6), dtype=np.uint32):
+def generate_data(rmax=256, size=int(1e5), dtype=np.uint32):
     return np.random.randint(0, rmax, size=size, dtype=dtype)
 
 
@@ -21,4 +21,4 @@ def benchmark(name, size):
     yield
     t1 = perf_counter() - t0
     print("%s time %.6f s," % (name, t1), end=" ")
-    print("{:,} uints/sec".format(int(60 / t1) * size))
+    print("{:,} uints/sec".format(int(size / t1)))
